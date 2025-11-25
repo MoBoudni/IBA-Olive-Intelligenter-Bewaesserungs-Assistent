@@ -4,6 +4,7 @@ import org.iba.exception.SensorFehlerException;
 
 /**
  * Definiert das allgemeine Interface für alle Sensoren im IBA-Olive System (MVP+).
+ * <p>
  * Dieses Interface abstrahiert den Zugriff auf Hardware und ermöglicht eine
  * spätere nahtlose Integration von echten IoT-Sensoren oder Simulationen,
  * ohne die Geschäftslogik ändern zu müssen.

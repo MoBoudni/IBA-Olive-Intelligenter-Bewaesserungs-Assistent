@@ -8,6 +8,38 @@
     <artifactId>IBA-Olive-Intelligenter-Bewaesserungs-Assistent</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <dependencies>
+        <!-- ... (Andere Abhängigkeiten, falls vorhanden) ... -->
+
+        <!-- JavaFX Dependencies (Required for the GUI) -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>21.0.1</version> <!-- Aktuelle LTS Version -->
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>21.0.1</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
+                <configuration>
+                    <mainClass>org.iba.MainApplication</mainClass> <!-- Wird in Schritt 2 erstellt -->
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
+
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>

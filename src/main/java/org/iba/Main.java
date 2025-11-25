@@ -14,14 +14,12 @@ import java.util.Scanner;
  * Diese Klasse dient als Einstiegspunkt (Entry Point) und steuert den gesamten
  * Workflow der Konsolenanwendung. Sie koordiniert die Benutzereingaben,
  * die Erfassung von Sensordaten und die Ausgabe der Bewässerungsempfehlung.
-
  */
 public class Main {
 
     /**
      * Die Main-Methode startet die Anwendung.
      * Der Ablauf ist wie folgt definiert:
-     *
      * Initialisierung der Komponenten (Rechner, Sensor, Scanner).
      * Erfassung der Parzellendaten (mit Validierung).
      * Erfassung der Wetterdaten.

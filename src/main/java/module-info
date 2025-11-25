@@ -1,0 +1,17 @@
+/**
+ * Definiert die Java-Module, die das IBA-Olive-Projekt benötigt.
+ * Erlaubt die Nutzung von JavaFX für die Benutzeroberfläche.
+ */
+module org.iba.ibaolive {
+    // Exportiert die App-Schicht, damit die JavaFX-Laufzeit darauf zugreifen kann
+    exports org.iba.app;
+
+    // JavaFX-Module, die benötigt werden (WICHTIG!)
+    requires javafx.controls;
+    requires javafx.fxml;
+
+    // Stellt sicher, dass die Anwendung die Klassen (z.B. Logik) nutzen kann
+    // In einer späteren Phase müssten hier auch die Pakete für die GUI exports stehen.
+
+    opens org.iba.app to javafx.graphics, javafx.fxml; // Öffnet das App-Package für JavaFX
+}
