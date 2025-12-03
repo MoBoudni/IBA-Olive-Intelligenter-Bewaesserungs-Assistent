@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Definiert die Wurzel des Layouts und bindet den Controller -->
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Font?>
+
+<VBox alignment="TOP_CENTER" spacing="20.0" style="-fx-background-color: #f7f9f7;"
+      xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="org.iba.ui.MainController"> <!-- Verweis auf den Controller -->
+
+    <padding>
+        <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
+    </padding>
+
+    <!-- TITEL -->
+    <Label text="Intelligenter Bewässerungs-Assistent (IBA-Olive)"
+           style="-fx-text-fill: #38761d; -fx-font-weight: bold;">
+        <font>
+            <Font name="Arial" size="24.0" />
+        </font>
+    </Label>
+
+    <!-- INPUT GRID -->
+    <GridPane hgap="15.0" vgap="15.0" alignment="CENTER"
+              style="-fx-border-color: #d9ead3; -fx-border-width: 1; -fx-border-radius: 8; -fx-background-color: #eaf1e7;">
+        <padding>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+        </padding>
+
+        <!-- Olivenbaum-Daten -->
+        <Label text="OLIVENBAUM-DATEN:" GridPane.columnIndex="0" GridPane.rowIndex="0"
+               style="-fx-font-weight: bold;" />
+
+        <Label text="Parzelle Name:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+        <TextField fx:id="txtName" promptText="Parzelle A" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+        <Label text="Alter (Jahre):" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+        <TextField fx:id="txtAlter" promptText="5" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+        <Label text="Basisbedarf (L/Tag):" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+        <TextField fx:id="txtBasisBedarf" promptText="75.0" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+
+        <!-- Wetterdaten -->
+        <Label text="WETTERDATEN (Aktuell):" GridPane.columnIndex="0" GridPane.rowIndex="5"
+               style="-fx-font-weight: bold;" />
+
+        <Label text="Temperatur (°C):" GridPane.columnIndex="0" GridPane.rowIndex="6" />
+        <TextField fx:id="txtTemperatur" promptText="28.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+
+        <Label text="Niederschlag (mm, 24h):" GridPane.columnIndex="0" GridPane.rowIndex="7" />
+        <TextField fx:id="txtNiederschlag" promptText="5.0" GridPane.columnIndex="1" GridPane.rowIndex="7" />
+    </GridPane>
+
+    <!-- BERECHNUNGS-BUTTON -->
+    <Button text="Wasserbedarf berechnen" onAction="#berechneBedarf"
+            style="-fx-background-color: #6aa84f; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5;"
+            prefWidth="250.0" />
+
+    <!-- BERECHNUNGS-BUTTON -->
+    <Button fx:id="btnBerechne" text="Wasserbedarf berechnen" onAction="#berechneBedarf"
+            style="-fx-background-color: #6aa84f; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5;"
+            prefWidth="250.0" />
+
+    <!-- ERGEBNISSE & STATUS -->
+    <Label fx:id="lblErgebnis" text="Ergebnis: Werte eingeben und berechnen."
+           style="-fx-font-weight: bold; -fx-text-fill: #38761d;">
+        <font>
+            <Font name="Arial" size="18.0" />
+        </font>
+    </Label>
+
+    <Label fx:id="lblSensorStatus" text="Sensor-Status: Nicht getestet"
+           style="-fx-text-fill: DARKGRAY;" />
+
+</VBox>

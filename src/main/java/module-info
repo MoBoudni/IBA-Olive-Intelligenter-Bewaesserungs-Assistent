@@ -4,7 +4,7 @@
  */
 module org.iba.ibaolive {
     // Exportiert die App-Schicht, damit die JavaFX-Laufzeit darauf zugreifen kann
-    exports org.iba.app;
+    exports org.iba.ui;
 
     // JavaFX-Module, die benötigt werden (WICHTIG!)
     requires javafx.controls;

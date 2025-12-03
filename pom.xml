@@ -25,6 +25,13 @@
             <version>${javafx.version}</version>
         </dependency>
 
+        <!-- JavaFX FXML: WICHTIG für das Laden von MainView.fxml -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+
         <!-- JUnit -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
