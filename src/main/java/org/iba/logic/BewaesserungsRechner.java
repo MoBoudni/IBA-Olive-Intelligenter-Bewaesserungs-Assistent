@@ -4,95 +4,116 @@ import org.iba.model.Olivenbaum;
 import org.iba.model.Wetterdaten;
 
 /**
- * Implementierung des Berechnungsmodells zur Ermittlung des täglichen Wasserbedarfs.
- * <p>
- * Diese Klasse enthält die Geschäftslogik (Business Logic). Sie ist zustandslos (stateless)
- * und rein funktional implementiert.
- * </p>
+ * Die Kernlogik zur Berechnung des täglichen Wasserbedarfs eines Olivenbaums
+ * unter Berücksichtigung verschiedener Korrekturfaktoren (Alter, Temperatur,
+ * Niederschlag und Bodenfeuchte).
  */
 public class BewaesserungsRechner {
 
+    // Reduktionsfaktor für Niederschlag (1 mm Niederschlag = 0.5 Liter Reduktion)
+    private static final double NIEDERSCHLAG_REDUKTIONSFAKTOR = 0.5;
+
     /**
-     * Berechnet den angepassten täglichen Wasserbedarf (MVP-Logik).
-     * <p>
-     * Formel: {@code Bedarf = max(0, B_basis * f_Alter * f_Temp - E_Niederschlag)}
-     * </p>
+     * Berechnet den täglichen Wasserbedarf basierend auf Baum- und Wetterdaten
+     * ohne Berücksichtigung der Bodenfeuchte (Fallback-Logik).
      *
-     * @param baum   Das Olivenbaum-Objekt mit Basisbedarf und Alter.
+     * @param baum Die Olivenbaum-Daten.
      * @param wetter Die Wetterdaten (Temperatur, Niederschlag).
-     * @return Der errechnete Wasserbedarf in Litern.
+     * @return Der berechnete Wasserbedarf in Litern (mindestens 0.0).
      */
     public double berechneWasserbedarf(Olivenbaum baum, Wetterdaten wetter) {
-        // 1. Faktoren ermitteln
-        double fAlter = getAltersFaktor(baum.getAlter());
-        double fTemp = getTemperaturFaktor(wetter.getTemperatur());
-        double eNiederschlag = getEffektiverNiederschlag(wetter.getNiederschlag());
+        double basisbedarf = baum.getBasisBedarf();
 
-        // 2. Berechnung nach Formel
-        // B_basis * f_Alter * f_Temp - E_Niederschlag
-        double berechneterBedarf = baum.getBasisBedarf() * fAlter * fTemp - eNiederschlag;
+        // 1. Anwendung der Faktoren
+        double faktorAlter = getAltersFaktor(baum.getAlter());
+        double faktorTemperatur = getTemperaturFaktor(wetter.getTemperatur());
 
-        // 3. Sicherstellen, dass der Bedarf nicht negativ ist (max(0, ...))
-        return Math.max(0, berechneterBedarf);
+        double korrigierterBedarf = basisbedarf * faktorAlter * faktorTemperatur;
+
+        // 2. Abzug des Niederschlags
+        double abzugNiederschlag = wetter.getNiederschlag() * NIEDERSCHLAG_REDUKTIONSFAKTOR;
+        double endbedarf = korrigierterBedarf - abzugNiederschlag;
+
+        // Der Bedarf darf nie negativ sein
+        return Math.max(0.0, endbedarf);
     }
 
     /**
-     * Berechnet den Wasserbedarf unter Berücksichtigung von Sensordaten (MVP+ Logik).
-     * <p>
-     * Dies ist eine überladene Methode (Method Overloading).
-     * </p>
+     * Berechnet den täglichen Wasserbedarf MIT Berücksichtigung der Bodenfeuchte.
      *
-     * @param baum         Das Olivenbaum-Objekt.
-     * @param wetter       Die Wetterdaten.
-     * @param bodenfeuchte Der gemessene Wert der Bodenfeuchte in Prozent (0.0 bis 100.0).
-     * @return Der errechnete Wasserbedarf in Litern (0.0, wenn Boden feucht genug).
+     * @param baum Die Olivenbaum-Daten.
+     * @param wetter Die Wetterdaten (Temperatur, Niederschlag).
+     * @param bodenfeuchte Die gemessene Bodenfeuchte in Prozent (z.B. 45.5).
+     * @return Der berechnete Wasserbedarf in Litern (mindestens 0.0).
      */
     public double berechneWasserbedarf(Olivenbaum baum, Wetterdaten wetter, double bodenfeuchte) {
-        // Logik-Erweiterung: Wenn der Boden sehr feucht ist (> 80%),
-        // ist keine Bewässerung nötig, egal wie heiß es ist.
-        if (bodenfeuchte > 80.0) {
+        // Zuerst den Bedarf ohne Feuchtekontrolle berechnen
+        double bedarfOhneFeuchte = berechneWasserbedarf(baum, wetter);
+
+        // Wenn der Bedarf durch Regen bereits 0.0 ist, bleibt er 0.0
+        if (bedarfOhneFeuchte <= 0.0) {
             return 0.0;
         }
 
-        // Ansonsten: Rückfall auf die Standard-Formel
-        return berechneWasserbedarf(baum, wetter);
+        // Korrektur durch Bodenfeuchte
+        double faktorFeuchte = getBodenfeuchteFaktor(bodenfeuchte);
+
+        // Anwendung des Feuchtefaktors auf den bereits durch Alter/Temperatur/Regen
+        // korrigierten Bedarf.
+        return bedarfOhneFeuchte * faktorFeuchte;
     }
 
-    // --- Private Hilfsmethoden (Kapselung der Faktoren) ---
+
+    // ========================================================================
+    //                              KORREKTURFAKTOREN
+    // ========================================================================
 
     /**
-     * Ermittelt den Altersfaktor f_Alter.
-     * Jung (<3): 0.8 | Reif (3-10): 1.0 | Alt (>10): 1.2
+     * Ermittelt den Korrekturfaktor basierend auf dem Alter des Olivenbaums.
      */
     private double getAltersFaktor(int alter) {
         if (alter < 3) {
             return 0.8;
         } else if (alter <= 10) {
             return 1.0;
-        } else {
+        } else { // alter > 10
             return 1.2;
         }
     }
 
     /**
-     * Ermittelt den Temperaturfaktor f_Temp.
-     * Kühl (<15°C): 0.85 | Normal (15-25°C): 1.0 | Heiß (>25°C): 1.15
+     * Ermittelt den Korrekturfaktor basierend auf der aktuellen Temperatur.
      */
     private double getTemperaturFaktor(double temperatur) {
         if (temperatur < 15.0) {
             return 0.85;
         } else if (temperatur <= 25.0) {
             return 1.0;
-        } else {
+        } else { // temperatur > 25.0
             return 1.15;
         }
     }
 
     /**
-     * Berechnet den effektiven Niederschlag.
-     * Nur 50% des Regens werden als effektiv für die Wurzeln angesehen.
+     * Ermittelt den **KORRIGIERTEN** Korrekturfaktor basierend auf der Bodenfeuchte.
+     * WICHTIG: Die Bedingung für die Obergrenze des jeweiligen, trockeneren Bereichs muss einschließend (<=) sein,
+     * um die erwarteten Testergebnisse zu erfüllen.
+     *
+     * @param feuchte Bodenfeuchte in Prozent.
+     * @return Korrekturfaktor.
      */
-    private double getEffektiverNiederschlag(double niederschlag) {
-        return niederschlag * 0.5;
+    private double getBodenfeuchteFaktor(double feuchte) {
+        // [FEHLER BEHOBEN] Verwendung von <= an den oberen Grenzen der trockeneren Bereiche.
+        if (feuchte <= 20.0) {
+            return 1.2; // Extrem trocken (20.0 gehört hierzu)
+        } else if (feuchte <= 35.0) {
+            return 1.1; // Eher trocken (35.0 gehört hierzu)
+        } else if (feuchte <= 50.0) {
+            return 1.0; // Neutral (50.0 gehört hierzu)
+        } else if (feuchte <= 70.0) {
+            return 0.8; // Nass (70.0 gehört hierzu)
+        } else {
+            return 0.6; // Sehr nass (> 70.0)
+        }
     }
 }

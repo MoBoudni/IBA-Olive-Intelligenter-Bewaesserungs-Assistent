@@ -4,184 +4,222 @@ import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
-
+import org.iba.exception.SensorFehlerException;
 import org.iba.logic.BewaesserungsRechner;
 import org.iba.model.Olivenbaum;
 import org.iba.model.Wetterdaten;
 import org.iba.sensor.BodenfeuchteSensor;
-import org.iba.exception.SensorFehlerException;
+
+import java.text.DecimalFormat;
 
 /**
- * Die Hauptklasse für die JavaFX-basierte grafische Benutzeroberfläche (GUI) des IBA-Olive Assistenten.
- * Sie ersetzt die reine Konsolenanwendung und dient zur visuellen Eingabe und Ausgabe.
+ * Hauptanwendung des Intelligenten Bewässerungs-Assistenten (IBA-Olive).
+ * Diese Klasse initialisiert die JavaFX-Benutzeroberfläche und bindet die
+ * Geschäftslogik (Rechner und Sensor) ein.
  */
 public class MainApplication extends Application {
 
-    // Geschäftslogik und Sensoren werden instanziiert
+    // Geschäftslogik und Modelle
     private final BewaesserungsRechner rechner = new BewaesserungsRechner();
     private final BodenfeuchteSensor sensor = new BodenfeuchteSensor();
+    private final DecimalFormat df = new DecimalFormat("#0.00");
 
-    // GUI Komponenten für Eingabe und Ausgabe
-    private TextField nameField = new TextField("Parzelle A");
-    private TextField alterField = new TextField("8");
-    private TextField basisBedarfField = new TextField("40.0");
-    private TextField tempField = new TextField("28.5");
-    private TextField niederschlagField = new TextField("5.0");
-    private Label ergebnisLabel = new Label("Bitte Daten eingeben und berechnen.");
-    private Label sensorStatusLabel = new Label("Sensor: Wird bei Berechnung gelesen.");
+    // UI-Elemente
+    private TextField txtName, txtAlter, txtBasisBedarf;
+    private TextField txtTemperatur, txtNiederschlag;
+    private Text txtErgebnis;
+    private Text txtSensorStatus;
 
     /**
-     * Startet die JavaFX-Anwendung und erstellt die primäre Benutzeroberfläche.
-     * * @param stage Die primäre Bühne (Fenster) für diese Anwendung.
+     * Startet die JavaFX-Anwendung.
      */
     @Override
-    public void start(Stage stage) {
-        stage.setTitle("IBA-Olive - Bewässerungs-Assistent");
+    public void start(Stage primaryStage) {
+        // Konfiguriere das Hauptfenster
+        primaryStage.setTitle("IBA-Olive: Intelligenter Bewässerungs-Assistent");
 
-        // Haupt-Layout Container
-        VBox root = new VBox(20); // Abstand 20px
-        root.setPadding(new Insets(20));
+        // Erstelle das Layout
+        VBox root = new VBox(20);
+        root.setPadding(new Insets(25));
         root.setAlignment(Pos.TOP_CENTER);
-        root.setStyle("-fx-font-family: 'Inter', sans-serif;");
+        root.setStyle("-fx-background-color: #f7f9f7;");
 
         // Titel
-        Label title = new Label("Intelligenter Bewässerungs-Assistent");
-        title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #38a169;");
+        Label title = new Label("Intelligenter Bewässerungs-Assistent (IBA)");
+        title.setFont(Font.font("Arial", FontWeight.BOLD, 24));
+        title.setTextFill(Color.web("#38761d")); // Dunkles Olivgrün
 
-        // Eingabe-Grid
+        // Eingabegrid für Olivenbaum- und Wetterdaten
         GridPane inputGrid = createInputGrid();
 
-        // Button
-        Button calculateButton = new Button("Bewässerungsbedarf berechnen");
-        calculateButton.setStyle("-fx-background-color: #38a169; -fx-text-fill: white; -fx-font-size: 16px; -fx-padding: 10 20; -fx-cursor: hand;");
-        calculateButton.setOnAction(e -> calculateWaterNeed());
+        // Ergebnis- und Statusanzeige
+        txtErgebnis = new Text("Ergebnis: Werte eingeben und berechnen.");
+        txtErgebnis.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+        txtErgebnis.setFill(Color.web("#8fbc8f")); // Helles Olivgrün
 
-        // Ergebnis- und Status-Container
-        VBox resultBox = new VBox(5);
-        resultBox.setPadding(new Insets(10));
-        resultBox.setStyle("-fx-border-color: #d1d5db; -fx-border-radius: 8px; -fx-background-color: #f9fafb;");
+        txtSensorStatus = new Text("Sensor-Status: Nicht getestet");
+        txtSensorStatus.setFont(Font.font("Arial", 14));
+        txtSensorStatus.setFill(Color.DARKGRAY);
 
-        ergebnisLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
-        sensorStatusLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #6b7280;");
+        // Berechnungs-Button
+        Button btnBerechnen = new Button("Wasserbedarf berechnen");
+        btnBerechnen.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        btnBerechnen.setStyle("-fx-background-color: #6aa84f; -fx-text-fill: white; -fx-border-radius: 5; -fx-background-radius: 5;");
+        btnBerechnen.setPrefWidth(250);
+        btnBerechnen.setOnAction(e -> berechneBedarf());
 
-        resultBox.getChildren().addAll(ergebnisLabel, sensorStatusLabel);
+        // Füge alle Komponenten zum Haupt-Layout hinzu
+        root.getChildren().addAll(title, inputGrid, btnBerechnen, txtErgebnis, txtSensorStatus);
 
-        root.getChildren().addAll(title, inputGrid, calculateButton, resultBox);
-
-        Scene scene = new Scene(root, 600, 650);
-        stage.setScene(scene);
-        stage.show();
+        // Zeige die Szene an
+        Scene scene = new Scene(root, 500, 650);
+        primaryStage.setScene(scene);
+        primaryStage.show();
     }
 
     /**
-     * Erstellt das Gitter-Layout für alle Eingabefelder.
-     * @return Ein konfiguriertes GridPane.
+     * Erstellt das GridPane für die Eingabefelder.
      */
     private GridPane createInputGrid() {
         GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
+        grid.setHgap(15);
+        grid.setVgap(15);
         grid.setPadding(new Insets(10));
-        grid.setAlignment(Pos.CENTER);
-        grid.setStyle("-fx-border-color: #10b981; -fx-border-radius: 8px; -fx-padding: 15;");
+        grid.setStyle("-fx-border-color: #d9ead3; -fx-border-width: 1; -fx-border-radius: 8; -fx-background-color: #eaf1e7;");
 
         int row = 0;
-        grid.add(new Label("--- Parzellen-Daten ---"), 0, row++);
-        grid.add(new Label("Name der Parzelle:"), 0, row);
-        grid.add(nameField, 1, row++);
-        grid.add(new Label("Alter (Jahre):"), 0, row);
-        grid.add(alterField, 1, row++);
-        grid.add(new Label("Basis-Bedarf (L/Tag):"), 0, row);
-        grid.add(basisBedarfField, 1, row++);
 
-        grid.add(new Label("--- Wetterdaten ---"), 0, row++);
-        grid.add(new Label("Temperatur (°C):"), 0, row);
-        grid.add(tempField, 1, row++);
-        grid.add(new Label("Niederschlag (mm):"), 0, row);
-        grid.add(niederschlagField, 1, row++);
+        // Abschnitt Olivenbaum
+        Label lblBaum = new Label("OLIVENBAUM-DATEN:");
+        lblBaum.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        grid.add(lblBaum, 0, row++, 2, 1);
+
+        txtName = addRow(grid, row++, "Parzelle Name:", "Parzelle A");
+        txtAlter = addRow(grid, row++, "Alter (Jahre):", "5");
+        txtBasisBedarf = addRow(grid, row++, "Basisbedarf (L/Tag):", "75.0");
+
+        row++; // Abstand
+
+        // Abschnitt Wetterdaten
+        Label lblWetter = new Label("WETTERDATEN (Aktuell):");
+        lblWetter.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        grid.add(lblWetter, 0, row++, 2, 1);
+
+        txtTemperatur = addRow(grid, row++, "Temperatur (°C):", "28.0");
+        txtNiederschlag = addRow(grid, row++, "Niederschlag (mm, 24h):", "5.0");
 
         return grid;
     }
 
     /**
-     * Event Handler, der bei Klick auf den Button aufgerufen wird.
-     * Führt die Berechnung durch und aktualisiert die Labels.
+     * Hilfsmethode zum Hinzufügen einer Label-TextField-Kombination.
      */
-    private void calculateWaterNeed() {
+    private TextField addRow(GridPane grid, int row, String labelText, String placeholder) {
+        Label label = new Label(labelText);
+        label.setFont(Font.font("Arial", 14));
+        TextField textField = new TextField();
+        textField.setPromptText(placeholder);
+        textField.setMaxWidth(150);
+
+        grid.add(label, 0, row);
+        grid.add(textField, 1, row);
+        return textField;
+    }
+
+    /**
+     * Verarbeitet die Benutzereingaben, führt die Berechnung durch
+     * und behandelt mögliche Fehler (Validierung und Sensor).
+     */
+    private void berechneBedarf() {
         try {
-            // 1. Daten aus GUI lesen und validieren
-            String name = nameField.getText();
-            int alter = Integer.parseInt(alterField.getText());
-            double basisBedarf = Double.parseDouble(basisBedarfField.getText());
-            double temperatur = Double.parseDouble(tempField.getText());
-            double niederschlag = Double.parseDouble(niederschlagField.getText());
+            // 1. Daten aus der UI lesen und validieren
+            Olivenbaum baum = new Olivenbaum(
+                    txtName.getText(),
+                    Integer.parseInt(txtAlter.getText()),
+                    Double.parseDouble(txtBasisBedarf.getText())
+            );
 
-            // 2. Erstellung der Modell-Objekte (wirft IllegalArgumentException bei Fehlern)
-            Olivenbaum baum = new Olivenbaum(name, alter, basisBedarf);
-            Wetterdaten wetter = new Wetterdaten(temperatur, niederschlag);
+            Wetterdaten wetter = new Wetterdaten(
+                    Double.parseDouble(txtTemperatur.getText()),
+                    Double.parseDouble(txtNiederschlag.getText())
+            );
 
-            // 3. Sensor lesen (mit Exception Handling)
-            double bodenfeuchte = -1.0;
-            boolean sensorErfolg = false;
+            double endbedarf;
+            double gemesseneFeuchte = 0.0;
+            boolean sensorFehler = false;
 
+            // 2. Sensor-Messwert abrufen (mit Fehler-Handling)
             try {
-                bodenfeuchte = sensor.messWertLesen();
-                sensorStatusLabel.setText(String.format("Sensor-Status: OK (Bodenfeuchte: %.1f%%)", bodenfeuchte));
-                sensorStatusLabel.setStyle("-fx-text-fill: #10b981;");
-                sensorErfolg = true;
+                gemesseneFeuchte = sensor.messWertLesen();
+                // Wenn erfolgreich, mit Bodenfeuchte rechnen
+                endbedarf = rechner.berechneWasserbedarf(baum, wetter, gemesseneFeuchte);
+                txtSensorStatus.setText(String.format("Sensor-Status: OK. Feuchte: %.1f%%", gemesseneFeuchte));
+                txtSensorStatus.setFill(Color.web("#38761d")); // Grün
+
             } catch (SensorFehlerException e) {
-                sensorStatusLabel.setText("Sensor-FEHLER: " + e.getMessage());
-                sensorStatusLabel.setStyle("-fx-text-fill: #ef4444;");
-                sensorErfolg = false;
+                // Wenn Sensorfehler auftritt, auf Fallback-Logik umschalten
+                sensorFehler = true;
+                endbedarf = rechner.berechneWasserbedarf(baum, wetter); // Ohne Bodenfeuchte
+                txtSensorStatus.setText("Sensor-Status: FEHLER! Fallback-Modus aktiv.");
+                txtSensorStatus.setFill(Color.web("#cc0000")); // Rot
+                zeigeFehler(e.getMessage());
             }
 
-            // 4. Berechnung
-            double bedarf;
-            if (sensorErfolg) {
-                bedarf = rechner.berechneWasserbedarf(baum, wetter, bodenfeuchte);
-            } else {
-                // Fallback-Berechnung
-                bedarf = rechner.berechneWasserbedarf(baum, wetter);
+            // 3. Ergebnis anzeigen
+            String ergebnisText = String.format("Ergebnis: %s Liter/Tag empfohlen.", df.format(endbedarf));
+            if (sensorFehler) {
+                ergebnisText += " (Basis-Berechnung ohne Feuchte)";
             }
-
-            // 5. Ergebnis ausgeben
-            if (bedarf > 0) {
-                ergebnisLabel.setText(String.format("Empfehlung: %.2f Liter", bedarf));
-                ergebnisLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #10b981;");
-            } else {
-                ergebnisLabel.setText("Empfehlung: KEINE Bewässerung notwendig.");
-                ergebnisLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #6b7280;");
-            }
-
-        } catch (NumberFormatException e) {
-            // Fängt Fehler ab, wenn Text in Zahl konvertiert werden soll
-            ergebnisLabel.setText("FEHLER: Bitte nur gültige Zahlen eingeben.");
-            ergebnisLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #ef4444;");
-            sensorStatusLabel.setText("Überprüfen Sie alle Eingabefelder.");
+            txtErgebnis.setText(ergebnisText);
+            txtErgebnis.setFill(Color.web("#38761d")); // Grün
 
         } catch (IllegalArgumentException e) {
-            // Fängt Validierungsfehler aus den Modellklassen ab (z.B. negatives Alter)
-            ergebnisLabel.setText("FEHLER: Ungültige Daten: " + e.getMessage());
-            ergebnisLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #ef4444;");
-            sensorStatusLabel.setText("Korrigieren Sie die Parzellen- oder Wetterdaten.");
+            // BEHOBEN: NumberFormatException ist eine Unterklasse von IllegalArgumentException
+            // und wird daher hier mit abgedeckt. Der Compilerfehler wurde durch Entfernen
+            // von NumberFormatException aus dem Multi-Catch-Block behoben.
 
-        } catch (Exception e) {
-            // Catch-All für unerwartete Fehler
-            ergebnisLabel.setText("Unerwarteter Fehler: " + e.getClass().getSimpleName());
-            ergebnisLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #ef4444;");
+            txtErgebnis.setText("Ergebnis: Fehler bei der Eingabe.");
+            txtErgebnis.setFill(Color.RED);
+            txtSensorStatus.setText("Sensor-Status: Fehler in Eingabedaten.");
+            txtSensorStatus.setFill(Color.RED);
+
+            // Differenzierte Fehlermeldung
+            String errorMessage;
+            if (e instanceof NumberFormatException) {
+                errorMessage = "Ungültiges Zahlenformat: Bitte stellen Sie sicher, dass alle numerischen Felder Zahlen enthalten (z.B. 75.0 oder 5).";
+            } else {
+                // Fängt die "echte" IllegalArgumentException ab (z.B. wenn Alter < 0)
+                errorMessage = "Eingabefehler: " + e.getMessage();
+            }
+            zeigeFehler(errorMessage);
         }
     }
 
     /**
-     * Startmethode, die von der JVM aufgerufen wird.
-     * Ersetzt die alte Main-Methode in der Main-Klasse.
-     * * @param args Kommandozeilenargumente.
+     * Zeigt eine JavaFX-Alert-Box für Fehlermeldungen an.
+     * @param message Die anzuzeigende Fehlermeldung.
+     */
+    private void zeigeFehler(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Fehler im Assistenten");
+        alert.setHeaderText("Achtung: Problem aufgetreten");
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+    /**
+     * Die Main-Methode, die die Anwendung startet.
      */
     public static void main(String[] args) {
         launch(args);

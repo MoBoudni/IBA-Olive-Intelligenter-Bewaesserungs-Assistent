@@ -1,24 +1,33 @@
 package org.iba.model;
 
 /**
- * Kapselung meteorologischer Parameter für einen bestimmten Tag. [cite: 14]
+ * Speichert die aktuellen meteorologischen Daten, die für die Bedarfsberechnung relevant sind.
  */
 public class Wetterdaten {
-
-    private double temperatur; // Temperatur in Celsius
-    private double niederschlag; // Niederschlag in mm
+    private final double temperatur; // Temperatur in Celsius
+    private final double niederschlag; // Niederschlag in mm
 
     /**
-     * Konstruktor für die Wetterdaten-Entität.
-     * @param temperatur Aktuelle Tagestemperatur (°C)
-     * @param niederschlag Niederschlagsmenge (mm)
+     * Konstruktor für Wetterdaten.
+     * Führt eine grundlegende Validierung der Eingabeparameter durch.
+     *
+     * @param temperatur Aktuelle Temperatur in °C.
+     * @param niederschlag Niederschlag in mm (letzte 24h).
+     * @throws IllegalArgumentException wenn die Eingabewerte ungültig sind.
      */
     public Wetterdaten(double temperatur, double niederschlag) {
+        if (temperatur < -50.0 || temperatur > 60.0) { // Realistische Spannen
+            throw new IllegalArgumentException("Temperatur liegt außerhalb des realistischen Bereichs (-50°C bis 60°C).");
+        }
+        if (niederschlag < 0.0) {
+            throw new IllegalArgumentException("Niederschlag kann nicht negativ sein.");
+        }
+
         this.temperatur = temperatur;
         this.niederschlag = niederschlag;
     }
 
-    // --- Getters ---
+    // Getter-Methoden
 
     public double getTemperatur() {
         return temperatur;
@@ -26,10 +35,5 @@ public class Wetterdaten {
 
     public double getNiederschlag() {
         return niederschlag;
-    }
-
-    @Override
-    public String toString() {
-        return "Wetterdaten [Temperatur=" + temperatur + "°C, Niederschlag=" + niederschlag + " mm]";
     }
 }

@@ -3,20 +3,16 @@ package org.iba.sensor;
 import org.iba.exception.SensorFehlerException;
 
 /**
- * Definiert das allgemeine Interface für alle Sensoren im IBA-Olive System (MVP+).
- * <p>
- * Dieses Interface abstrahiert den Zugriff auf Hardware und ermöglicht eine
- * spätere nahtlose Integration von echten IoT-Sensoren oder Simulationen,
- * ohne die Geschäftslogik ändern zu müssen.
+ * Interface für alle Sensor-Klassen im Bewässerungs-Assistenten.
+ * Definiert den Vertrag für das Auslesen eines Messwertes.
  */
 public interface Sensor {
-
     /**
      * Liest den aktuellen Messwert des Sensors aus.
+     * Muss eine SensorFehlerException deklarieren, da Sensoren fehlschlagen können.
      *
-     * @return Der gemessene Wert als Gleitkommazahl (z.B. Bodenfeuchte in Prozent).
-     * @throws SensorFehlerException Wenn der Sensor nicht erreichbar ist, ein Timeout auftritt
-     * oder ungültige Daten liefert.
+     * @return Der aktuelle Messwert (z.B. Bodenfeuchte in Prozent).
+     * @throws SensorFehlerException Wenn ein technischer Fehler beim Auslesen des Sensors auftritt.
      */
     double messWertLesen() throws SensorFehlerException;
 }
