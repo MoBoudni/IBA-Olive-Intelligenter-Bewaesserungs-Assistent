@@ -8,7 +8,7 @@
 
 <VBox alignment="TOP_CENTER" spacing="20.0" style="-fx-background-color: #f7f9f7;"
       xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="org.iba.ui.MainController"> <!-- Verweis auf den Controller -->
+      fx:controller="org.iba.ui.MainApplication"> <!-- Verweis auf den Controller -->
 
     <padding>
         <Insets bottom="25.0" left="25.0" right="25.0" top="25.0" />
@@ -30,7 +30,7 @@
         </padding>
 
         <!-- Olivenbaum-Daten -->
-        <Label text="OLIVENBAUM-DATEN:" GridPane.columnIndex="0" GridPane.rowIndex="0"
+        <Label text="BAUM-DATEN:" GridPane.columnIndex="0" GridPane.rowIndex="0"
                style="-fx-font-weight: bold;" />
 
         <Label text="Parzelle Name:" GridPane.columnIndex="0" GridPane.rowIndex="1" />

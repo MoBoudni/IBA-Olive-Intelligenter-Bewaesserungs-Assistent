@@ -17,14 +17,14 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import org.iba.exception.SensorFehlerException;
 import org.iba.logic.BewaesserungsRechner;
-import org.iba.model.Olivenbaum;
+import org.iba.model.Baum;
 import org.iba.model.Wetterdaten;
 import org.iba.sensor.BodenfeuchteSensor;
 
 import java.text.DecimalFormat;
 
 /**
- * Hauptanwendung des Intelligenten Bewässerungs-Assistenten (IBA-Olive).
+ * Hauptanwendung des intelligenten Bewässerungs-Assistenten (IBA-Olive).
  * Diese Klasse initialisiert die JavaFX-Benutzeroberfläche und bindet die
  * Geschäftslogik (Rechner und Sensor) ein.
  */
@@ -56,7 +56,7 @@ public class MainApplication extends Application {
         root.setStyle("-fx-background-color: #f7f9f7;");
 
         // Titel
-        Label title = new Label("Intelligenter Bewässerungs-Assistent (IBA)");
+        Label title = new Label("Intelligenter Bewaesserungs-Assistent (IBA)");
         title.setFont(Font.font("Arial", FontWeight.BOLD, 24));
         title.setTextFill(Color.web("#38761d")); // Dunkles Olivgrün
 
@@ -144,9 +144,12 @@ public class MainApplication extends Application {
     private void berechneBedarf() {
         try {
             // 1. Daten aus der UI lesen und validieren
-            Olivenbaum baum = new Olivenbaum(
-                    txtName.getText(),
+            // KORREKTUR: Der Baum-Konstruktor erfordert (parzelleId, alterJahre, pflanzenartId, basisBedarf).
+            // Der Parzellenname (txtName.getText()) wurde entfernt und durch Platzhalter-IDs ersetzt.
+            Baum baum = new Baum(
+                    1, // Platzhalter: parzelleId (Muss in realer App dynamisch ermittelt werden)
                     Integer.parseInt(txtAlter.getText()),
+                    1, // Platzhalter: pflanzenartId (z.B. Olivenbaum)
                     Double.parseDouble(txtBasisBedarf.getText())
             );
 
@@ -185,10 +188,7 @@ public class MainApplication extends Application {
             txtErgebnis.setFill(Color.web("#38761d")); // Grün
 
         } catch (IllegalArgumentException e) {
-            // BEHOBEN: NumberFormatException ist eine Unterklasse von IllegalArgumentException
-            // und wird daher hier mit abgedeckt. Der Compilerfehler wurde durch Entfernen
-            // von NumberFormatException aus dem Multi-Catch-Block behoben.
-
+            // Fängt alle ungültigen Argumente und Formatfehler ab
             txtErgebnis.setText("Ergebnis: Fehler bei der Eingabe.");
             txtErgebnis.setFill(Color.RED);
             txtSensorStatus.setText("Sensor-Status: Fehler in Eingabedaten.");

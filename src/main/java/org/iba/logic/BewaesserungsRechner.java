@@ -1,6 +1,6 @@
 package org.iba.logic;
 
-import org.iba.model.Olivenbaum;
+import org.iba.model.Baum;
 import org.iba.model.Wetterdaten;
 
 /**
@@ -21,11 +21,11 @@ public class BewaesserungsRechner {
      * @param wetter Die Wetterdaten (Temperatur, Niederschlag).
      * @return Der berechnete Wasserbedarf in Litern (mindestens 0.0).
      */
-    public double berechneWasserbedarf(Olivenbaum baum, Wetterdaten wetter) {
+    public double berechneWasserbedarf(Baum baum, Wetterdaten wetter) {
         double basisbedarf = baum.getBasisBedarf();
 
         // 1. Anwendung der Faktoren
-        double faktorAlter = getAltersFaktor(baum.getAlter());
+        double faktorAlter = getAltersFaktor(baum.getAlterJahre());
         double faktorTemperatur = getTemperaturFaktor(wetter.getTemperatur());
 
         double korrigierterBedarf = basisbedarf * faktorAlter * faktorTemperatur;
@@ -46,7 +46,7 @@ public class BewaesserungsRechner {
      * @param bodenfeuchte Die gemessene Bodenfeuchte in Prozent (z.B. 45.5).
      * @return Der berechnete Wasserbedarf in Litern (mindestens 0.0).
      */
-    public double berechneWasserbedarf(Olivenbaum baum, Wetterdaten wetter, double bodenfeuchte) {
+    public double berechneWasserbedarf(Baum baum, Wetterdaten wetter, double bodenfeuchte) {
         // Zuerst den Bedarf ohne Feuchtekontrolle berechnen
         double bedarfOhneFeuchte = berechneWasserbedarf(baum, wetter);
 
@@ -96,22 +96,19 @@ public class BewaesserungsRechner {
 
     /**
      * Ermittelt den **KORRIGIERTEN** Korrekturfaktor basierend auf der Bodenfeuchte.
-     * WICHTIG: Die Bedingung für die Obergrenze des jeweiligen, trockeneren Bereichs muss einschließend (<=) sein,
-     * um die erwarteten Testergebnisse zu erfüllen.
      *
      * @param feuchte Bodenfeuchte in Prozent.
      * @return Korrekturfaktor.
      */
     private double getBodenfeuchteFaktor(double feuchte) {
-        // [FEHLER BEHOBEN] Verwendung von <= an den oberen Grenzen der trockeneren Bereiche.
         if (feuchte <= 20.0) {
-            return 1.2; // Extrem trocken (20.0 gehört hierzu)
+            return 1.2; // Extrem trocken
         } else if (feuchte <= 35.0) {
-            return 1.1; // Eher trocken (35.0 gehört hierzu)
+            return 1.1; // Eher trocken
         } else if (feuchte <= 50.0) {
-            return 1.0; // Neutral (50.0 gehört hierzu)
+            return 1.0; // Neutral
         } else if (feuchte <= 70.0) {
-            return 0.8; // Nass (70.0 gehört hierzu)
+            return 0.8; // Nass
         } else {
             return 0.6; // Sehr nass (> 70.0)
         }

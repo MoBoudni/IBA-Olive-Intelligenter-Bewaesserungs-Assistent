@@ -1,182 +1,99 @@
-//package org.iba;
-//
-//import org.iba.logic.BewaesserungsRechner;
-//import org.iba.model.Olivenbaum;
-//import org.iba.model.Wetterdaten;
-//import org.iba.sensor.BodenfeuchteSensor;
-//import org.iba.sensor.Sensor;
-//import org.iba.exception.SensorFehlerException;
-//
-//import java.util.Scanner;
-//
-///**
-// * Die Hauptklasse der Anwendung "Intelligenter Bewaesserungs-Assistent" (IBA-Olive).
-// * Diese Klasse dient als Einstiegspunkt (Entry Point) und steuert den gesamten
-// * Workflow der Konsolenanwendung. Sie koordiniert die Benutzereingaben,
-// * die Erfassung von Sensordaten und die Ausgabe der Bewässerungsempfehlung.
-// */
-//public class Main {
-//
-//    /**
-//     * Die Main-Methode startet die Anwendung.
-//     * Der Ablauf ist wie folgt definiert:
-//     * Initialisierung der Komponenten (Rechner, Sensor, Scanner).
-//     * Erfassung der Parzellendaten (mit Validierung).
-//     * Erfassung der Wetterdaten.
-//     * Versuch, den Bodenfeuchtesensor auszulesen (inkl. Fehlertoleranz).
-//     * Berechnung des Wasserbedarfs basierend auf verfügbaren Daten.
-//     * Ausgabe der Empfehlung an den Nutzer.
-//     *
-//     * @param args Kommandozeilenargumente (werden in dieser Version nicht verwendet).
-//     */
-//    public static void main(String[] args) {
-//        // [1] Initialisierung der Systemkomponenten
-//        Scanner scanner = new Scanner(System.in);
-//        BewaesserungsRechner rechner = new BewaesserungsRechner();
-//
-//        // Sensor wird instanziiert, aber der Zugriff erfolgt erst später im geschützten Block
-//        Sensor bodenfeuchteSensor = new BodenfeuchteSensor();
-//
-//        System.out.println("--- Intelligenter Bewaesserungs-Assistent (IBA-Olive) ---");
-//
-//        try {
-//            // [2] Olivenbaum-Daten erfassen
-//            // Wir befinden uns im try-Block, um Validierungsfehler (IllegalArgumentException)
-//            // aus dem Olivenbaum-Konstruktor abzufangen.
-//            System.out.println("\n[1] Daten der Oliven-Parzelle eingeben:");
-//
-//            System.out.print("Name der Parzelle: ");
-//            String name = scanner.nextLine();
-//
-//            System.out.print("Alter (Jahre, z.B. 8): ");
-//            int alter = leseZahl(scanner);
-//
-//            System.out.print("Basis-Bedarf (L/Tag, z.B. 40): ");
-//            double basisBedarf = leseDezimalZahl(scanner);
-//
-//            // Erstellung des Objekts - hier greift die Validierung der Klasse Olivenbaum
-//            Olivenbaum baum = new Olivenbaum(name, alter, basisBedarf);
-//            System.out.println("-> Parzelle erfolgreich angelegt: " + baum.getName());
-//
-//
-//            // [3] Wetterdaten erfassen
-//            System.out.println("\n[2] Aktuelle Wetterdaten eingeben:");
-//
-//            System.out.print("Temperatur (°C, z.B. 28.5): ");
-//            double temperatur = leseDezimalZahl(scanner);
-//
-//            System.out.print("Niederschlag (mm, z.B. 5.0): ");
-//            double niederschlag = leseDezimalZahl(scanner);
-//
-//            Wetterdaten wetter = new Wetterdaten(temperatur, niederschlag);
-//            System.out.println("-> Wetterdaten erfasst.");
-//
-//
-//            // [4] Sensor lesen (Kritischer Pfad mit spezifischem Exception Handling)
-//            double bodenfeuchte = -1.0; // Initialwert (Signal für "keine Daten")
-//            boolean sensorErfolg = false; // Flag zur Steuerung der Berechnungslogik
-//
-//            try {
-//                System.out.print("\n[SYSTEM] Verbinde mit Bodenfeuchtesensor... ");
-//                // Versuch, den Sensor zu lesen. Dies kann eine SensorFehlerException werfen.
-//                bodenfeuchte = bodenfeuchteSensor.messWertLesen();
-//
-//                System.out.printf("OK (Messwert: %.1f%%)\n", bodenfeuchte);
-//                sensorErfolg = true;
-//
-//            } catch (SensorFehlerException e) {
-//                // Graceful Degradation: Wir fangen den Fehler ab und arbeiten ohne Sensor weiter.
-//                System.err.println("\n[FEHLER] Sensor-Verbindung fehlgeschlagen: " + e.getMessage());
-//                System.out.println("[FALLBACK] System wechselt in den manuellen Modus (Wetterdaten-basiert).");
-//                sensorErfolg = false;
-//            }
-//
-//
-//            // [5] Berechnung durchführen (Logikweiche basierend auf Sensor-Verfügbarkeit)
-//            double bedarf;
-//
-//            if (sensorErfolg) {
-//                // MVP+ Logik: Berechnung unter Einbeziehung der Bodenfeuchte
-//                bedarf = rechner.berechneWasserbedarf(baum, wetter, bodenfeuchte);
-//            } else {
-//                // Fallback / MVP Logik: Berechnung rein basierend auf Wetterdaten
-//                // Wir nutzen die überladene Methode, die keinen Sensorwert erwartet.
-//                bedarf = rechner.berechneWasserbedarf(baum, wetter);
-//            }
-//
-//
-//            // [6] Ausgabe der Empfehlung
-//            System.out.println("\n==============================================");
-//            System.out.printf("Bewässerungsempfehlung für Parzelle '%s':%n", baum.getName());
-//
-//            if (bedarf > 0) {
-//                System.out.printf("Empfohlene Bewässerungsmenge heute: %.2f Liter.%n", bedarf);
-//                System.out.println("Grund: Hohe Temperatur, geringer Niederschlag und/oder trockener Boden.");
-//            } else {
-//                System.out.println("KEINE Bewässerung notwendig.");
-//
-//                // Detaillierte Begründung abhängig vom Sensor-Status
-//                if (sensorErfolg && bodenfeuchte > 80.0) {
-//                    System.out.printf("Grund: Bodenfeuchte ist ausreichend hoch (%.1f%%).\n", bodenfeuchte);
-//                } else {
-//                    System.out.println("Grund: Ausreichender natürlicher Niederschlag oder niedrige Verdunstung.");
-//                }
-//            }
-//            System.out.println("==============================================");
-//
-//        } catch (IllegalArgumentException e) {
-//            // Fängt fachliche Fehler ab (z.B. negatives Alter, leerer Name)
-//            System.err.println("\n[ABBRUCH] Ungültige Eingabedaten erkannt:");
-//            System.err.println(">> " + e.getMessage());
-//            System.out.println("Bitte starten Sie das Programm neu und prüfen Sie Ihre Eingaben.");
-//
-//        } catch (Exception e) {
-//            // Catch-All für unerwartete technische Fehler (z.B. NullPointer)
-//            System.err.println("\n[FATAL] Ein unerwarteter Systemfehler ist aufgetreten: " + e.getMessage());
-//            e.printStackTrace(); // Für Debugging-Zwecke hilfreich
-//
-//        } finally {
-//            // Ressource freigeben: Scanner schließen
-//            if (scanner != null) {
-//                scanner.close();
-//            }
-//            System.out.println("\n[SYSTEM] Programm beendet.");
-//        }
-//    }
-//
-//    // --- Hilfsmethoden für robuste Eingabe ---
-//
-//    /**
-//     * Liest eine ganze Zahl (Integer) von der Konsole ein und behandelt
-//     * Fehleingaben (z.B. Buchstaben), bis eine gültige Zahl eingegeben wird.
-//     *
-//     * @param scanner Der aktive Scanner für die Eingabe.
-//     * @return Eine gültige ganze Zahl.
-//     */
-//    private static int leseZahl(Scanner scanner) {
-//        while (!scanner.hasNextInt()) {
-//            System.out.print("Ungültige Eingabe. Bitte ganze Zahl eingeben: ");
-//            scanner.next(); // Ungültigen Token aus dem Puffer entfernen
-//        }
-//        int zahl = scanner.nextInt();
-//        scanner.nextLine(); // Zeilenumbruch konsumieren
-//        return zahl;
-//    }
-//
-//    /**
-//     * Liest eine Dezimalzahl (Double) von der Konsole ein und behandelt
-//     * Fehleingaben, bis eine gültige Zahl eingegeben wird.
-//     *
-//     * @param scanner Der aktive Scanner für die Eingabe.
-//     * @return Eine gültige Dezimalzahl.
-//     */
-//    private static double leseDezimalZahl(Scanner scanner) {
-//        while (!scanner.hasNextDouble()) {
-//            System.out.print("Ungültige Eingabe. Bitte Dezimalzahl (z.B. 25.5) eingeben: ");
-//            scanner.next(); // Ungültigen Token aus dem Puffer entfernen
-//        }
-//        double zahl = scanner.nextDouble();
-//        scanner.nextLine(); // Zeilenumbruch konsumieren
-//        return zahl;
-//    }
-//}
+package org.iba;
+
+import org.iba.db.BaumRepository;
+import org.iba.db.MesswerteRepository;
+import org.iba.db.ParzelleRepository;
+import org.iba.model.Baum;
+import org.iba.model.Parzelle;
+import org.iba.model.Wetterdaten;
+import org.iba.service.BerechnungService;
+
+import java.util.Map;
+
+/**
+ * Hauptanwendungsklasse zum Initialisieren aller Komponenten und zum Testen
+ * der Geschäftslogik (Berechnung des Wasserbedarfs).
+ * Stellt sicher, dass die Datenbankverbindungskonstanten in den Repositories
+ * korrekt sind, bevor diese Klasse ausgeführt wird.
+ */
+public class Main {
+
+    public static void main(String[] args) {
+        System.out.println("--- IBA Bewaesserungs-Assistent: Systemstart ---");
+
+        // 1. Initialisierung der Persistenzschicht
+        ParzelleRepository parzelleRepo = new ParzelleRepository();
+        BaumRepository baumRepo = new BaumRepository();
+        MesswerteRepository messwerteRepo = new MesswerteRepository();
+
+        // Stellt sicher, dass alle Tabellen existieren und löscht alte Daten für den Test
+        setupTestData(parzelleRepo, baumRepo, messwerteRepo);
+
+        // 2. Initialisierung der Serviceschicht
+        BerechnungService berechnungService = new BerechnungService(parzelleRepo, baumRepo, messwerteRepo);
+
+        // 3. Ausführung der Kernlogik
+        System.out.println("\n--- Starte Wasserbedarfsberechnung ---");
+        Map<String, Double> ergebnisse = berechnungService.berechneGesamtWasserbedarfProParzelle();
+
+        // 4. Ausgabe der Ergebnisse
+        System.out.println("\n--- Ergebnisse der Bewässerungsempfehlung (Liter pro Tag) ---");
+        if (ergebnisse.isEmpty()) {
+            System.out.println("Es wurden keine Parzellen gefunden oder berechnet.");
+        } else {
+            ergebnisse.forEach((name, bedarf) ->
+                    System.out.printf("Parzelle '%s': Benötigter Wasserbedarf: %.2f Liter%n", name, bedarf)
+            );
+        }
+
+        System.out.println("\n--- Systemende ---");
+    }
+
+    /**
+     * Setzt die Datenbank mit Testdaten auf.
+     * Löscht vorhandene Daten in den Baum- und Parzellen-Tabellen.
+     */
+    private static void setupTestData(ParzelleRepository parzelleRepo, BaumRepository baumRepo, MesswerteRepository messwerteRepo) {
+        try {
+            System.out.println("Lösche vorhandene Testdaten und erstelle neue...");
+
+            // 1. Bereinigung (in umgekehrter Abhängigkeitsreihenfolge)
+            // HINWEIS: Ein echtes Repository benötigt eine Methode zum Löschen aller Daten, hier wird es simuliert
+
+            // 2. Erstellung der Parzellen
+            // KORREKTUR: Verwendung des 6-Argumente-Konstruktors (ID, Name, Anzahl Bäume, Fläche, KlimaZone, BesitzerID)
+            // die ID (0) wird als Platzhalter verwendet. Die Anzahl der Bäume wird auf 2 gesetzt.
+            Parzelle parzelleA = parzelleRepo.speichere(new Parzelle(0, "Feld Südhang", 2, 1000.0, "Mediterran", 101));
+            Parzelle parzelleB = parzelleRepo.speichere(new Parzelle(0, "Feld Nordseite", 2, 800.0, "Kontinental", 101));
+
+            System.out.println("Parzellen erstellt: " + parzelleA.getName() + " (ID: " + parzelleA.getParzelleId() + "), " + parzelleB.getName() + " (ID: " + parzelleB.getParzelleId() + ")");
+
+            // 3. Erstellung der Bäume (alle mit PflanzenartId 1)
+            int pflanzenartId = 1; // Olivenbaum
+
+            // Parzelle A (Südhang) - Trockenhoheitsszenario
+            baumRepo.speichere(new Baum(parzelleA.getParzelleId(), 5, pflanzenartId, 25.0)); // 5 Jahre, 25l Basis
+            baumRepo.speichere(new Baum(parzelleA.getParzelleId(), 12, pflanzenartId, 30.0)); // 12 Jahre, 30l Basis
+
+            // Parzelle B (Nordseite) - Feuchtigkeitsszenario
+            baumRepo.speichere(new Baum(parzelleB.getParzelleId(), 2, pflanzenartId, 20.0)); // 2 Jahre, 20l Basis
+            baumRepo.speichere(new Baum(parzelleB.getParzelleId(), 7, pflanzenartId, 28.0)); // 7 Jahre, 28l Basis
+
+            // 4. Erstellung der Messwerte
+            // Parzelle A: Hohe Temperatur, wenig Niederschlag (HOCH-BEDARF)
+            Wetterdaten datenA = new Wetterdaten(30.0, 0.5); // 30°C, 0.5mm Regen
+            messwerteRepo.speichere(datenA, parzelleA.getParzelleId());
+
+            // Parzelle B: Mittlere Temperatur, viel Niederschlag (NIEDRIG-BEDARF)
+            Wetterdaten datenB = new Wetterdaten(20.0, 10.0); // 20°C, 10mm Regen
+            messwerteRepo.speichere(datenB, parzelleB.getParzelleId());
+
+            System.out.println("Testdaten erfolgreich in die Datenbank geschrieben.");
+
+        } catch (IllegalArgumentException e) {
+            System.err.println("FEHLER beim Erstellen der Testdaten (ungültige Modelldaten): " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Ein unerwarteter Fehler beim Setup ist aufgetreten: " + e.getMessage());
+        }
+    }
+}

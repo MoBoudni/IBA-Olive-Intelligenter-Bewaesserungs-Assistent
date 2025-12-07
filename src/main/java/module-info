@@ -1,17 +1,27 @@
 /**
- * Definiert die Java-Module, die das IBA-Olive-Projekt benötigt.
- * Erlaubt die Nutzung von JavaFX für die Benutzeroberfläche.
+ * Moduldeklaration für den IBA-Olive Bewaesserungs-Assistenten.
  */
-module org.iba.ibaolive {
-    // Exportiert die App-Schicht, damit die JavaFX-Laufzeit darauf zugreifen kann
-    exports org.iba.ui;
-
-    // JavaFX-Module, die benötigt werden (WICHTIG!)
+module org.iba.olive.assistant {
+    // Erforderliche JavaFX-Module
     requires javafx.controls;
     requires javafx.fxml;
 
-    // Stellt sicher, dass die Anwendung die Klassen (z.B. Logik) nutzen kann
-    // In einer späteren Phase müssten hier auch die Pakete für die GUI exports stehen.
+    // Erforderlich für Datenbankverbindungen (muss im Modulsystem vorhanden sein)
+    requires java.sql;
 
-    opens org.iba.app to javafx.graphics, javafx.fxml; // Öffnet das App-Package für JavaFX
+    // Erforderlich für die MySQL Connector/J-Bibliothek (da es kein natives Modul ist)
+    requires com.mysql.cj;
+
+    // Dieses Modul exportiert das UI-Paket, damit JavaFX die MainApplication finden kann.
+    exports org.iba.ui;
+
+    // Exportieren Sie alle Controller- oder Model-Pakete, die Sie eventuell für FXML-Controller benötigen.
+    // exports org.iba.model;
+    // exports org.iba.controller;
+
+    // Öffnet das UI-Paket, damit FXML Reflection darauf zugreifen kann (wichtig für Controller!)
+    opens org.iba.ui to javafx.fxml;
+
+    // Fügen Sie hier weitere 'opens'-Anweisungen für FXML-Controller-Pakete hinzu
+    // opens org.iba.controller to javafx.fxml;
 }
