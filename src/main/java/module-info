@@ -15,13 +15,6 @@ module org.iba.olive.assistant {
     // Dieses Modul exportiert das UI-Paket, damit JavaFX die MainApplication finden kann.
     exports org.iba.ui;
 
-    // Exportieren Sie alle Controller- oder Model-Pakete, die Sie eventuell für FXML-Controller benötigen.
-    // exports org.iba.model;
-    // exports org.iba.controller;
-
     // Öffnet das UI-Paket, damit FXML Reflection darauf zugreifen kann (wichtig für Controller!)
-    opens org.iba.ui to javafx.fxml;
-
-    // Fügen Sie hier weitere 'opens'-Anweisungen für FXML-Controller-Pakete hinzu
-    // opens org.iba.controller to javafx.fxml;
+    opens org.iba.ui to javafx.fxml, javafx.graphics;
 }
