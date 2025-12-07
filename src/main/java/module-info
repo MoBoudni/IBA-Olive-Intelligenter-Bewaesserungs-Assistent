@@ -13,5 +13,5 @@ module org.iba.ibaolive {
     // Stellt sicher, dass die Anwendung die Klassen (z.B. Logik) nutzen kann
     // In einer späteren Phase müssten hier auch die Pakete für die GUI exports stehen.
 
-    opens org.iba.app to javafx.graphics, javafx.fxml; // Öffnet das App-Package für JavaFX
+    opens org.iba.ui to javafx.graphics, javafx.fxml; // Öffnet das App-Package für JavaFX
 }
