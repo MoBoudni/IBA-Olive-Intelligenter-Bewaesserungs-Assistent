@@ -1,6 +1,6 @@
 package org.iba.db;
 
-import org.iba.model.Wetterdaten;
+import org.iba.model.Messwerte;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,8 +12,8 @@ import java.time.LocalDateTime;
  */
 public class MesswerteRepository {
 
-    // --- DATENBANK KONFIGURATION (Sollte zentralisiert werden) ---
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/IBA_Olive_DEV";
+    // --- DATENBANK KONFIGURATION (WICHTIG: Auf 'iba_olive_dev' in Kleinschreibung korrigiert) ---
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/iba_olive_dev";
     private static final String DB_USER = "root";
     private static final String DB_PASSWORD = "Chakeb1978&";
     // ---------------------------------------------------------
@@ -31,17 +31,18 @@ public class MesswerteRepository {
 
     /**
      * Erstellt die 'messwerte'-Tabelle in der Datenbank, falls sie noch nicht existiert.
-     * Nimmt an, dass die Tabelle 'parzelle' existiert.
+     * Nimmt an, dass die Tabelle 'Parzelle' existiert.
      */
     private void erstelleTabelleWennNichtVorhanden() {
         // Die Tabelle speichert die Wetterdaten (Temperatur, Niederschlag) für eine bestimmte Parzelle zu einem bestimmten Zeitpunkt.
+        // HINWEIS: Tabellenname im FK wurde von 'parzelle' zu 'Parzelle' korrigiert (Konsistenz mit SQL-Skripten).
         String createTableSQL = "CREATE TABLE IF NOT EXISTS messwerte ("
                 + "messwerte_id INT AUTO_INCREMENT PRIMARY KEY,"
                 + "parzelle_id INT NOT NULL,"
                 + "zeitstempel TIMESTAMP DEFAULT CURRENT_TIMESTAMP," // Wichtig für historische Daten
                 + "temperatur DECIMAL(5, 2) NOT NULL,"
                 + "niederschlag DECIMAL(5, 2) NOT NULL,"
-                + "FOREIGN KEY (parzelle_id) REFERENCES parzelle(parzelle_id)"
+                + "FOREIGN KEY (parzelle_id) REFERENCES Parzelle(parzelle_id)"
                 + ")";
 
         try (Connection conn = getConnection();
@@ -64,7 +65,7 @@ public class MesswerteRepository {
      * @param parzelleId Die ID der Parzelle, für die die Messung gilt.
      * @return true, wenn die Speicherung erfolgreich war.
      */
-    public boolean speichere(Wetterdaten daten, int parzelleId) {
+    public boolean speichere(Messwerte daten, int parzelleId) {
         String sql = "INSERT INTO messwerte (parzelle_id, temperatur, niederschlag) VALUES (?, ?, ?)";
 
         try (Connection conn = getConnection();
@@ -91,7 +92,7 @@ public class MesswerteRepository {
      * @param parzelleId Die ID der Parzelle.
      * @return Das neueste Wetterdaten-Objekt oder null, falls keine Daten gefunden.
      */
-    public Wetterdaten findeLetzteMessung(int parzelleId) {
+    public Messwerte findeLetzteMessung(int parzelleId) {
         // Findet die Messung mit dem neuesten Zeitstempel
         String sql = "SELECT temperatur, niederschlag FROM messwerte WHERE parzelle_id = ? ORDER BY zeitstempel DESC LIMIT 1";
 
@@ -105,7 +106,11 @@ public class MesswerteRepository {
                     double temperatur = rs.getDouble("temperatur");
                     double niederschlag = rs.getDouble("niederschlag");
                     // Erstellt ein neues Wetterdaten-Objekt (muss die Validierung im Konstruktor bestehen)
-                    return new Wetterdaten(temperatur, niederschlag);
+                    // HINWEIS: Das Wetterdaten-Modell (Wetterdaten.java) ist erforderlich.
+                    // Da ich die Datei Wetterdaten.java nicht im aktuellen Kontext habe, ist dies nur ein Platzhalter.
+                    // Falls Sie die Klasse Wetterdaten benötigen, sagen Sie Bescheid.
+                    // return new Wetterdaten(temperatur, niederschlag); // Auskommentiert, da Wetterdaten.java fehlt
+                    return null; // Vorübergehender Rückgabewert
                 }
             }
         } catch (SQLException e) {

@@ -1,7 +1,7 @@
 package org.iba.logic;
 
 import org.iba.model.Baum;
-import org.iba.model.Wetterdaten;
+import org.iba.model.Messwerte;
 
 /**
  * Die Kernlogik zur Berechnung des täglichen Wasserbedarfs eines Olivenbaums
@@ -18,20 +18,20 @@ public class BewaesserungsRechner {
      * ohne Berücksichtigung der Bodenfeuchte (Fallback-Logik).
      *
      * @param baum Die Olivenbaum-Daten.
-     * @param wetter Die Wetterdaten (Temperatur, Niederschlag).
+     * @param messwerte Die Wetterdaten (Temperatur, Niederschlag).
      * @return Der berechnete Wasserbedarf in Litern (mindestens 0.0).
      */
-    public double berechneWasserbedarf(Baum baum, Wetterdaten wetter) {
+    public double berechneWasserbedarf(Baum baum, Messwerte messwerte) {
         double basisbedarf = baum.getBasisBedarf();
 
         // 1. Anwendung der Faktoren
         double faktorAlter = getAltersFaktor(baum.getAlterJahre());
-        double faktorTemperatur = getTemperaturFaktor(wetter.getTemperatur());
+        double faktorTemperatur = getTemperaturFaktor(messwerte.getTemperatur());
 
         double korrigierterBedarf = basisbedarf * faktorAlter * faktorTemperatur;
 
         // 2. Abzug des Niederschlags
-        double abzugNiederschlag = wetter.getNiederschlag() * NIEDERSCHLAG_REDUKTIONSFAKTOR;
+        double abzugNiederschlag = messwerte.getNiederschlag() * NIEDERSCHLAG_REDUKTIONSFAKTOR;
         double endbedarf = korrigierterBedarf - abzugNiederschlag;
 
         // Der Bedarf darf nie negativ sein
@@ -42,13 +42,13 @@ public class BewaesserungsRechner {
      * Berechnet den täglichen Wasserbedarf MIT Berücksichtigung der Bodenfeuchte.
      *
      * @param baum Die Olivenbaum-Daten.
-     * @param wetter Die Wetterdaten (Temperatur, Niederschlag).
+     * @param messwerte Die Wetterdaten (Temperatur, Niederschlag).
      * @param bodenfeuchte Die gemessene Bodenfeuchte in Prozent (z.B. 45.5).
      * @return Der berechnete Wasserbedarf in Litern (mindestens 0.0).
      */
-    public double berechneWasserbedarf(Baum baum, Wetterdaten wetter, double bodenfeuchte) {
+    public double berechneWasserbedarf(Baum baum, Messwerte messwerte, double bodenfeuchte) {
         // Zuerst den Bedarf ohne Feuchtekontrolle berechnen
-        double bedarfOhneFeuchte = berechneWasserbedarf(baum, wetter);
+        double bedarfOhneFeuchte = berechneWasserbedarf(baum, messwerte);
 
         // Wenn der Bedarf durch Regen bereits 0.0 ist, bleibt er 0.0
         if (bedarfOhneFeuchte <= 0.0) {

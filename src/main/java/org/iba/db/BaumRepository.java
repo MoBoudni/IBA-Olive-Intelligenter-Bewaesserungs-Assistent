@@ -11,7 +11,7 @@ import java.util.List;
  */
 public class BaumRepository {
 
-    // --- DATENBANK KONFIGURATION (Muss in ein zentrales Utility ausgelagert werden) ---
+    // --- DATENBANK KONFIGURATION ---
     private static final String DB_URL = "jdbc:mysql://localhost:3306/IBA_Olive_DEV";
     private static final String DB_USER = "root";
     private static final String DB_PASSWORD = "Chakeb1978&";
@@ -30,24 +30,24 @@ public class BaumRepository {
 
     /**
      * Erstellt die 'baum'-Tabelle in der Datenbank, falls sie noch nicht existiert.
-     * Basierend auf dem normalisierten Schema.
      */
     private void erstelleTabelleWennNichtVorhanden() {
-        // Hinweis: Wir gehen davon aus, dass 'parzelle' und 'Pflanzenart' bereits existieren.
+        // Vereinfachte Version ohne Pflanzenart-FK, da die Tabelle nicht existiert
         String createTableSQL = "CREATE TABLE IF NOT EXISTS baum ("
                 + "baum_id INT AUTO_INCREMENT PRIMARY KEY,"
                 + "parzelle_id INT NOT NULL,"
-                + "alter_jahre INT,"
-                + "pflanzenart_id INT,"
-                + "FOREIGN KEY (parzelle_id) REFERENCES parzelle(parzelle_id),"
-                + "FOREIGN KEY (pflanzenart_id) REFERENCES Pflanzenart(pflanzenart_id)"
+                + "alter_jahre INT NOT NULL,"
+                + "pflanzenart_id INT NOT NULL,"
+                + "basis_bedarf DECIMAL(10, 2) DEFAULT 0.0 NOT NULL,"
+                + "FOREIGN KEY (parzelle_id) REFERENCES parzelle(parzelle_id)"
                 + ")";
 
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
 
             stmt.execute(createTableSQL);
-            // System.out.println("Datenbanktabelle 'baum' ist bereit.");
+            System.out.println("Tabelle 'baum' ist bereit.");
+
         } catch (SQLException e) {
             System.err.println("WARNUNG: Konnte Tabelle 'baum' nicht prüfen/erstellen: " + e.getMessage());
         }
@@ -59,7 +59,7 @@ public class BaumRepository {
      * Speichert einen neuen Baum in der Datenbank.
      */
     public Baum speichere(Baum baum) {
-        String sql = "INSERT INTO baum (parzelle_id, alter_jahre, pflanzenart_id) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO baum (parzelle_id, alter_jahre, pflanzenart_id, basis_bedarf) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -67,6 +67,7 @@ public class BaumRepository {
             pstmt.setInt(1, baum.getParzelleId());
             pstmt.setInt(2, baum.getAlterJahre());
             pstmt.setInt(3, baum.getPflanzenartId());
+            pstmt.setDouble(4, baum.getBasisBedarf());
 
             int affectedRows = pstmt.executeUpdate();
 
@@ -92,23 +93,80 @@ public class BaumRepository {
      */
     public List<Baum> findAlle() {
         List<Baum> baeume = new ArrayList<>();
-        String sql = "SELECT baum_id, parzelle_id, alter_jahre, pflanzenart_id FROM baum";
+        String sql = "SELECT baum_id, parzelle_id, alter_jahre, pflanzenart_id, basis_bedarf FROM baum";
 
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                int baumId = rs.getInt("baum_id");
-                int parzelleId = rs.getInt("parzelle_id");
-                int alterJahre = rs.getInt("alter_jahre");
-                int pflanzenartId = rs.getInt("pflanzenart_id");
-
-                Baum baum = new Baum(baumId, parzelleId, alterJahre, pflanzenartId);
+                Baum baum = new Baum(
+                        rs.getInt("baum_id"),
+                        rs.getInt("parzelle_id"),
+                        rs.getInt("alter_jahre"),
+                        rs.getInt("pflanzenart_id"),
+                        rs.getDouble("basis_bedarf")
+                );
                 baeume.add(baum);
             }
         } catch (SQLException e) {
             System.err.println("FEHLER beim Laden aller Bäume: " + e.getMessage());
+        }
+        return baeume;
+    }
+
+    /**
+     * Ruft einen Baum anhand seiner ID ab.
+     */
+    public Baum findById(int baumId) {
+        String sql = "SELECT baum_id, parzelle_id, alter_jahre, pflanzenart_id, basis_bedarf FROM baum WHERE baum_id = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, baumId);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return new Baum(
+                        rs.getInt("baum_id"),
+                        rs.getInt("parzelle_id"),
+                        rs.getInt("alter_jahre"),
+                        rs.getInt("pflanzenart_id"),
+                        rs.getDouble("basis_bedarf")
+                );
+            }
+        } catch (SQLException e) {
+            System.err.println("FEHLER beim Laden des Baumes mit ID " + baumId + ": " + e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Ruft alle Bäume einer bestimmten Parzelle ab.
+     */
+    public List<Baum> findByParzelleId(int parzelleId) {
+        List<Baum> baeume = new ArrayList<>();
+        String sql = "SELECT baum_id, parzelle_id, alter_jahre, pflanzenart_id, basis_bedarf FROM baum WHERE parzelle_id = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, parzelleId);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Baum baum = new Baum(
+                        rs.getInt("baum_id"),
+                        rs.getInt("parzelle_id"),
+                        rs.getInt("alter_jahre"),
+                        rs.getInt("pflanzenart_id"),
+                        rs.getDouble("basis_bedarf")
+                );
+                baeume.add(baum);
+            }
+        } catch (SQLException e) {
+            System.err.println("FEHLER beim Laden der Bäume für Parzelle " + parzelleId + ": " + e.getMessage());
         }
         return baeume;
     }
@@ -119,7 +177,7 @@ public class BaumRepository {
      * Aktualisiert die Daten eines vorhandenen Baumes.
      */
     public boolean aktualisiere(Baum baum) {
-        String sql = "UPDATE baum SET parzelle_id = ?, alter_jahre = ?, pflanzenart_id = ? WHERE baum_id = ?";
+        String sql = "UPDATE baum SET parzelle_id = ?, alter_jahre = ?, pflanzenart_id = ?, basis_bedarf = ? WHERE baum_id = ?";
 
         try (Connection conn = getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -127,7 +185,8 @@ public class BaumRepository {
             pstmt.setInt(1, baum.getParzelleId());
             pstmt.setInt(2, baum.getAlterJahre());
             pstmt.setInt(3, baum.getPflanzenartId());
-            pstmt.setInt(4, baum.getBaumId());
+            pstmt.setDouble(4, baum.getBasisBedarf());
+            pstmt.setInt(5, baum.getBaumId());
 
             int affectedRows = pstmt.executeUpdate();
             return affectedRows > 0;
@@ -156,6 +215,26 @@ public class BaumRepository {
 
         } catch (SQLException e) {
             System.err.println("FEHLER beim Löschen des Baumes (ID: " + baumId + "): " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Löscht alle Bäume einer Parzelle.
+     */
+    public boolean loescheAlleVonParzelle(int parzelleId) {
+        String sql = "DELETE FROM baum WHERE parzelle_id = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, parzelleId);
+
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0;
+
+        } catch (SQLException e) {
+            System.err.println("FEHLER beim Löschen der Bäume für Parzelle " + parzelleId + ": " + e.getMessage());
             return false;
         }
     }

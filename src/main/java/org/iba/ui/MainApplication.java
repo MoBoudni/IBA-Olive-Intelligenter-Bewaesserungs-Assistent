@@ -18,13 +18,13 @@ import javafx.stage.Stage;
 import org.iba.exception.SensorFehlerException;
 import org.iba.logic.BewaesserungsRechner;
 import org.iba.model.Baum;
-import org.iba.model.Wetterdaten;
+import org.iba.model.Messwerte;
 import org.iba.sensor.BodenfeuchteSensor;
 
 import java.text.DecimalFormat;
 
 /**
- * Hauptanwendung des intelligenten Bewässerungs-Assistenten (IBA-Olive).
+ * Hauptanwendung des intelligenten Bewaesserungs-Assistenten (IBA-Olive).
  * Diese Klasse initialisiert die JavaFX-Benutzeroberfläche und bindet die
  * Geschäftslogik (Rechner und Sensor) ein.
  */
@@ -47,7 +47,7 @@ public class MainApplication extends Application {
     @Override
     public void start(Stage primaryStage) {
         // Konfiguriere das Hauptfenster
-        primaryStage.setTitle("IBA-Olive: Intelligenter Bewässerungs-Assistent");
+        primaryStage.setTitle("IBA-Olive: Intelligenter Bewaesserungs-Assistent");
 
         // Erstelle das Layout
         VBox root = new VBox(20);
@@ -60,7 +60,7 @@ public class MainApplication extends Application {
         title.setFont(Font.font("Arial", FontWeight.BOLD, 24));
         title.setTextFill(Color.web("#38761d")); // Dunkles Olivgrün
 
-        // Eingabegrid für Olivenbaum- und Wetterdaten
+        // Eingabe-Grid für Olivenbaum- und Wetterdaten
         GridPane inputGrid = createInputGrid();
 
         // Ergebnis- und Statusanzeige
@@ -72,7 +72,7 @@ public class MainApplication extends Application {
         txtSensorStatus.setFont(Font.font("Arial", 14));
         txtSensorStatus.setFill(Color.DARKGRAY);
 
-        // Berechnungs-Button
+        // Berechnung-Button
         Button btnBerechnen = new Button("Wasserbedarf berechnen");
         btnBerechnen.setFont(Font.font("Arial", FontWeight.BOLD, 16));
         btnBerechnen.setStyle("-fx-background-color: #6aa84f; -fx-text-fill: white; -fx-border-radius: 5; -fx-background-radius: 5;");
@@ -153,7 +153,7 @@ public class MainApplication extends Application {
                     Double.parseDouble(txtBasisBedarf.getText())
             );
 
-            Wetterdaten wetter = new Wetterdaten(
+            Messwerte wetter = new Messwerte(
                     Double.parseDouble(txtTemperatur.getText()),
                     Double.parseDouble(txtNiederschlag.getText())
             );

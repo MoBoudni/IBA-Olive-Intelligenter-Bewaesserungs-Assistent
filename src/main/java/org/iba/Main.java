@@ -5,7 +5,7 @@ import org.iba.db.MesswerteRepository;
 import org.iba.db.ParzelleRepository;
 import org.iba.model.Baum;
 import org.iba.model.Parzelle;
-import org.iba.model.Wetterdaten;
+import org.iba.model.Messwerte;
 import org.iba.service.BerechnungService;
 
 import java.util.Map;
@@ -81,11 +81,11 @@ public class Main {
 
             // 4. Erstellung der Messwerte
             // Parzelle A: Hohe Temperatur, wenig Niederschlag (HOCH-BEDARF)
-            Wetterdaten datenA = new Wetterdaten(30.0, 0.5); // 30°C, 0.5mm Regen
+            Messwerte datenA = new Messwerte(30.0, 0.5); // 30°C, 0.5mm Regen
             messwerteRepo.speichere(datenA, parzelleA.getParzelleId());
 
             // Parzelle B: Mittlere Temperatur, viel Niederschlag (NIEDRIG-BEDARF)
-            Wetterdaten datenB = new Wetterdaten(20.0, 10.0); // 20°C, 10mm Regen
+            Messwerte datenB = new Messwerte(20.0, 10.0); // 20°C, 10mm Regen
             messwerteRepo.speichere(datenB, parzelleB.getParzelleId());
 
             System.out.println("Testdaten erfolgreich in die Datenbank geschrieben.");

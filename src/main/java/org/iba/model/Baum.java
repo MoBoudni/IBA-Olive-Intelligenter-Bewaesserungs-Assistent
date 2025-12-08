@@ -21,7 +21,7 @@ public class Baum {
 
     /**
      * Konstruktor mit allen Feldern (für das Laden aus der DB)
-     * Führt KEINE Validierung durch, da die Daten aus der Datenbank als valide gelten.
+     * führt KEINE Validierung durch, da die Daten aus der Datenbank als valide gelten.
      */
     public Baum(int baumId, int parzelleId, int alterJahre, int pflanzenartId, double basisBedarf) {
         this.baumId = baumId;
