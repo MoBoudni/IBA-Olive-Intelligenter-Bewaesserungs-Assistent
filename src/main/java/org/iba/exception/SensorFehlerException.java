@@ -1,28 +1,16 @@
 package org.iba.exception;
 
 /**
- * Benutzerdefinierte Exception für Fehler, die beim Lesen des Bodenfeuchte-Sensors auftreten.
- * Dies simuliert Hardware- oder Kommunikationsprobleme.
+ * Wird geworfen, wenn ein technischer Fehler beim Auslesen eines Sensors auftritt.
+ * Kann verschiedene Ursachen haben: Verbindungsprobleme, Hardwarefehler, etc.
  */
-public class SensorFehlerException extends Exception {
+public class SensorFehlerException extends IbaException {
 
-    /**
-     * Erstellt eine neue SensorFehlerException mit der angegebenen Detailnachricht.
-     *
-     * @param message Die Detailnachricht, die den Fehler beschreibt.
-     */
     public SensorFehlerException(String message) {
-        super(message);
+        super(ErrorCode.SENSOR_ERROR, message);
     }
 
-    /**
-     * Erstellt eine neue SensorFehlerException mit der angegebenen Detailnachricht
-     * und der zugrunde liegenden Ursache (Throwable).
-     *
-     * @param message Die Detailnachricht, die den Fehler beschreibt.
-     * @param cause Die Ursache dieser Exception.
-     */
     public SensorFehlerException(String message, Throwable cause) {
-        super(message, cause);
+        super(ErrorCode.SENSOR_ERROR, message, cause);
     }
 }

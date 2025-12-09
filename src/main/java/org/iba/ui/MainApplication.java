@@ -20,6 +20,7 @@ import org.iba.logic.BewaesserungsRechner;
 import org.iba.model.Baum;
 import org.iba.model.Messwerte;
 import org.iba.sensor.BodenfeuchteSensor;
+import org.iba.ui.handler.GlobalExceptionHandler;
 
 import java.text.DecimalFormat;
 
@@ -46,6 +47,10 @@ public class MainApplication extends Application {
      */
     @Override
     public void start(Stage primaryStage) {
+
+        // Globalen Exception-Handler installieren
+        GlobalExceptionHandler.getInstance().install();
+
         // Konfiguriere das Hauptfenster
         primaryStage.setTitle("IBA-Olive: Intelligenter Bewaesserungs-Assistent");
 
